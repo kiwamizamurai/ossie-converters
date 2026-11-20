@@ -310,9 +310,9 @@ equally be a scalar UDF, so treating it as an aggregate over-reports — the che
 since the default is to warn rather than refuse. Qualified and unqualified operands are
 counted independently, because one aggregate can read both.
 
-A column an aggregate reads only in the condition of a `CASE WHEN` (or `IF`) selects
-which rows count rather than being counted, so it is judged by how its dataset is
-joined. `SUM(CASE WHEN stores.region = 'EU' THEN orders.amount END)` -- what a Cube
+A column an aggregate reads only in the condition of a `CASE WHEN` (or `IF`), or as
+the operand of a simple `CASE`, selects which rows count rather than being counted, so
+it is judged by how its dataset is joined. `SUM(CASE WHEN stores.region = 'EU' THEN orders.amount END)` -- what a Cube
 `filters:` entry on `{stores}` becomes -- sums `orders` rows. When `stores` is reachable
 from every dataset the aggregate sums, in the sense of the wide-table semantics (steps
 from the many side to the one side of relationships), each summed row joins at most one

@@ -353,9 +353,11 @@ def unsafe_aggregate_reads(expr, source_dialect=None, heads=False):
     only to decide which rows count -- or None when `expr` does not parse.
 
     Each entry is `(values, predicates, unqualified_value, unqualified_predicate)`. A
-    column is a predicate when it sits in the condition of a `CASE WHEN` (or `IF`)
-    inside the aggregate: `SUM(CASE WHEN stores.region = 'EU' THEN orders.amount END)`
-    reads `orders` as its value and `stores` only as a predicate. Fan-out inflates an
+    column is a predicate when it sits in the condition of a `CASE WHEN` (or `IF`), or is
+    the operand of a simple `CASE`, inside the aggregate: `SUM(CASE WHEN stores.region =
+    'EU' THEN orders.amount END)` and `SUM(CASE stores.region WHEN 'EU' THEN
+    orders.amount END)` both read `orders` as their value and `stores` only as a
+    predicate. Fan-out inflates an
     aggregate through the rows it aggregates, so a predicate whose dataset is joined
     without multiplying those rows selects among them and adds none. An aggregate with
     no value column -- `COUNT(CASE WHEN ... THEN 1 END)` -- counts the rows of the cube
@@ -397,10 +399,12 @@ def unsafe_aggregate_reads(expr, source_dialect=None, heads=False):
 
 
 def _in_condition(column, scope):
-    """Whether `column` sits in the condition of a CASE/IF branch inside `scope`."""
+    """Whether `column` sits in the condition of a CASE/IF branch, or in the operand of
+    a simple CASE, inside `scope`. `CASE x WHEN v THEN r END` compares `x` with `v` and
+    returns `r`, so the operand only selects a branch, like `CASE WHEN x = v THEN r`."""
     child, node = column, column.parent
     while node is not None and child is not scope:
-        if isinstance(node, exp.If) and node.args.get("this") is child:
+        if isinstance(node, (exp.If, exp.Case)) and node.args.get("this") is child:
             return True
         child, node = node, node.parent
     return False

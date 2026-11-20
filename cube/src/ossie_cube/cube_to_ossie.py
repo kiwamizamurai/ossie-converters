@@ -1851,9 +1851,10 @@ def _fanout_unsafe_datasets(expr, own_cube, dataset_names, source_dialect=None,
     measure is declared on.
 
     With `reach` (from `_many_to_one_reach`), a dataset an aggregate reads only in a
-    CASE/IF condition is left out when it is reachable from every dataset the aggregate
-    sums, so joining it multiplies none of their rows: `SUM(CASE WHEN stores.region = 'EU' THEN orders.amount END)` over
-    `orders -> stores` many-to-one sums each order once. A predicate reached any other
+    CASE/IF condition, or in a simple CASE operand, is left out when it is reachable
+    from every dataset the aggregate sums, so joining it multiplies none of their rows:
+    `SUM(CASE WHEN stores.region = 'EU' THEN orders.amount END)` over `orders -> stores`
+    many-to-one sums each order once. A predicate reached any other
     way -- through a shared dimension, say -- still counts, since joining it can
     multiply the rows being summed.
     """

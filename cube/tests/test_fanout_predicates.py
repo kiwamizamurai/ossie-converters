@@ -117,6 +117,16 @@ def test_a_case_condition_on_a_many_to_one_target_leaves_a_sum_fanout_safe():
     assert "orders.eu_revenue" not in flagged
 
 
+def test_a_simple_case_operand_on_a_many_to_one_target_leaves_a_sum_fanout_safe():
+    """`CASE x WHEN v THEN r END` is `CASE WHEN x = v THEN r END`: the operand only
+    selects a branch, so it is judged like a CASE WHEN condition."""
+    _, flagged = _fanout_issues(
+        "      - name: eu_revenue\n"
+        "        sql: \"CASE {stores}.region WHEN 'EU' THEN {CUBE}.amount END\"\n"
+        "        type: sum\n")
+    assert "orders.eu_revenue" not in flagged
+
+
 def test_a_count_of_rows_selected_by_a_many_to_one_target_is_fanout_safe():
     _, flagged = _fanout_issues(
         "      - name: eu_orders\n"
